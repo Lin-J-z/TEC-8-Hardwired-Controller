@@ -41,6 +41,31 @@ module basic_task(
     output reg SELCTL          // 寄存器组选择控制使能
 );
 
+
+localparam [2:0]
+    MODE_AUTO = 3'b000,
+    MODE_READ_MEM = 3'b001,
+    MODE_WRITE_MEM = 3'b010,
+    MODE_READ_REG = 3'b011,
+    MODE_WRITE_REG = 3'b100;
+
+localparam [3:0]
+    OPCODE_NOP = 4'b0000,
+    OPCODE_ADD = 4'b0001,
+    OPCODE_SUB = 4'b0010,
+    OPCODE_AND = 4'b0011,
+    OPCODE_INC = 4'b0100,
+    OPCODE_LD  = 4'b0101,
+    OPCODE_ST  = 4'b0110,
+    OPCODE_JC  = 4'b0111,
+    OPCODE_JZ  = 4'b1000,
+    OPCODE_JMP = 4'b1001,
+    OPCODE_OUT = 4'b1010,
+    OPCODE_MOV = 4'b1011,
+    OPCODE_CMP = 4'b1100,
+    OPCODE_NOT = 4'b1101,
+    OPCODE_STP = 4'b1110;
+
     // ---------- 内部状态信号（非外部引脚） ----------
     reg ST0;      // 子状态标志：0=操作第一步，1=第二步
     reg SST0;     // ST0翻转使能信号
@@ -69,74 +94,72 @@ module basic_task(
             // 复位状态（所有信号已初始化为0）
         end else begin
             case ({SWC, SWB, SWA})
-                // ----- 3'b000: 取指（自动运行模式） -----
-                3'b000: begin
+                // ----- MODE_AUTO: 取指（自动运行模式） -----
+                MODE_AUTO: begin
                     if (ST0) begin          // ST0=1：第二个节拍
-                        if (W1) begin
-                            LIR = 1'b1;
-                            PCINC = 1'b1;
-                        end
-                        else if (W2) begin
+                        LIR = W1;
+                        PCINC = W1;
+                        if (W2) begin
                             case ({IR7, IR6, IR5, IR4})
-                                4'b0000: ; // NOP
-                                4'b0001: begin // ADD
+                                OPCODE_NOP: ; // NOP
+                                OPCODE_ADD: begin // ADD
                                     {S3, S2, S1, S0} = 4'b1001; // S=1001
                                     CIN = 1'b1; ABUS = 1'b1; DRW = 1'b1; LDZ = 1'b1; LDC = 1'b1;
                                 end
-                                4'b0010: begin // SUB
+                                OPCODE_SUB: begin // SUB
                                     {S3, S2, S1, S0} = 4'b0110; // S=0110
                                     ABUS = 1'b1; DRW = 1'b1; LDZ = 1'b1; LDC = 1'b1;
                                 end
-                                4'b0011: begin // AND
+                                OPCODE_AND: begin // AND
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b1011; // S=1011
                                     ABUS = 1'b1; DRW = 1'b1; LDZ = 1'b1;
                                 end
-                                4'b0100: begin // INC
+                                OPCODE_INC: begin // INC
                                     {S3, S2, S1, S0} = 4'b0000; // S=0000
                                     ABUS = 1'b1; DRW = 1'b1; LDZ = 1'b1; LDC = 1'b1;
                                 end
-                                4'b0101: begin // LD
+                                OPCODE_LD: begin // LD
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b1010; // S=1010
                                     ABUS = 1'b1; LAR = 1'b1; LONG = 1'b1;
                                 end
-                                4'b0110: begin // ST
+                                OPCODE_ST: begin // ST
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b1111; // S=1111
                                     ABUS = 1'b1; LAR = 1'b1; LONG = 1'b1;
                                 end
-                                4'b0111: begin // JC
+                                OPCODE_JC: begin // JC
                                     if (C == 1'b1) PCADD = 1'b1;
                                 end
-                                4'b1000: begin // JZ
+                                OPCODE_JZ: begin // JZ
                                     if (Z == 1'b1) PCADD = 1'b1;
                                 end
-                                4'b1001: begin // JMP
+                                OPCODE_JMP: begin // JMP
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b1111; // S=1111
                                     ABUS = 1'b1; LPC = 1'b1;
                                 end
-                                4'b1010: begin // OUT
+                                OPCODE_OUT: begin // OUT
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b1010; // S=1010
                                     ABUS = 1'b1;
                                 end
-                                4'b1011: begin // MOV
+                                OPCODE_MOV: begin // MOV
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b1010; // S=1010
                                     ABUS = 1'b1; DRW = 1'b1;
                                 end
-                                4'b1100: begin // CMP
+                                OPCODE_CMP: begin // CMP
                                     {S3, S2, S1, S0} = 4'b0110; // S=0110
                                     ABUS = 1'b1; LDZ = 1'b1; LDC = 1'b1;
                                 end
-                                4'b1101: begin // NOT
+                                OPCODE_NOT: begin // NOT
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b0000; // S=0000
                                     ABUS = 1'b1; DRW = 1'b1; LDC = 1'b1;
                                 end
-                                4'b1110: begin // STP
+                                OPCODE_STP: begin // STP
                                     STOP = 1'b1;
                                 end
                                 default: ;
@@ -144,10 +167,10 @@ module basic_task(
                         end
                         else if (W3) begin
                             case ({IR7, IR6, IR5, IR4})
-                                4'b0101: begin // LD回写
+                                OPCODE_LD: begin // LD回写
                                     DRW = 1'b1; MBUS = 1'b1;
                                 end
-                                4'b0110: begin // ST回写
+                                OPCODE_ST: begin // ST回写
                                     M = 1'b1;
                                     {S3, S2, S1, S0} = 4'b1010; // S=1010
                                     ABUS = 1'b1; MEMW = 1'b1;
@@ -156,19 +179,16 @@ module basic_task(
                             endcase
                         end
                     end else begin          // ST0=0：第一个节拍
-                        if (W1) begin
-                            STOP = 1'b1;     // 暂停，等待手动单步
-                        end
-                        else if (W2) begin
-                            SBUS = 1'b1;
-                            LPC = 1'b1;
-                            SST0 = 1'b1;     // 请求翻转ST0 → 进入下一个子状态
-                        end
+                        STOP = W1;
+                        
+                        SBUS = W2;
+                        LPC = W2;
+                        SST0 = W2;
                     end
                 end
 
-                // ----- 3'b001: 写存储器（控制台方式） -----
-                3'b001: begin
+                // ----- MODE_WRITE_MEM: 写存储器（控制台方式） -----
+                MODE_WRITE_MEM: begin
                     if (ST0) begin
                         if (W1) begin
                             SBUS = 1'b1; MEMW = 1'b1; ARINC = 1'b1; STOP = 1'b1;
@@ -182,8 +202,8 @@ module basic_task(
                     end
                 end
 
-                // ----- 3'b010: 读存储器（控制台方式） -----
-                3'b010: begin
+                // ----- MODE_READ_MEM: 读存储器（控制台方式） -----
+                MODE_READ_MEM: begin
                     if (ST0) begin
                         if (W1) begin
                             MBUS = 1'b1; ARINC = 1'b1; STOP = 1'b1;
@@ -197,44 +217,29 @@ module basic_task(
                     end
                 end
 
-                // ----- 3'b011: 读寄存器（控制台方式） -----
-                3'b011: begin
-                    if (W1) begin
-                        {SEL3, SEL2, SEL1, SEL0} = 4'b0001; // SEL=0001
-                        SELCTL = 1'b1; STOP = 1'b1;
-                    end
-                    else if (W2) begin
-                        {SEL3, SEL2, SEL1, SEL0} = 4'b1011; // SEL=1011
-                        SELCTL = 1'b1; STOP = 1'b1;
-                    end
+                // ----- MODE_READ_REG: 读寄存器（控制台方式） -----
+                MODE_READ_REG: begin
+                    SELCTL = W1 | W2;
+                    STOP = W1 | W2;
+                    SEL3 = W2;
+                    SEL2 = 1'b0;
+                    SEL1 = W1;
+                    SEL0 = 1'b1;
                 end
 
-                // ----- 3'b100: 写寄存器（控制台方式） -----
-                3'b100: begin
-                    if (ST0) begin
-                        if (W1) begin
-                            SBUS = 1'b1;
-                            {SEL3, SEL2, SEL1, SEL0} = 4'b1001; // SEL=1001
-                            SELCTL = 1'b1; DRW = 1'b1; STOP = 1'b1;
-                        end
-                        else if (W2) begin
-                            SBUS = 1'b1;
-                            {SEL3, SEL2, SEL1, SEL0} = 4'b1110; // SEL=1110 
-                            SELCTL = 1'b1; DRW = 1'b1; STOP = 1'b1;
-                        end
-                    end else begin
-                        if (W1) begin
-                            SBUS = 1'b1;
-                            {SEL3, SEL2, SEL1, SEL0} = 4'b0011; // SEL=0011
-                            SELCTL = 1'b1; DRW = 1'b1; STOP = 1'b1;
-                        end
-                        else if (W2) begin
-                            SBUS = 1'b1;
-                            {SEL3, SEL2, SEL1, SEL0} = 4'b0100; // SEL=0100
-                            SELCTL = 1'b1; STOP = 1'b1; DRW = 1'b1;
-                            SST0 = 1'b1;   // 请求翻转
-                        end
-                    end
+                // ----- MODE_WRITE_REG: 写寄存器（控制台方式） -----
+                MODE_WRITE_REG: begin
+                    SELCTL = W1 | W2;
+                    STOP = W1 | W2;
+                    SBUS = W1 | W2;
+                    DRW = W1 | W2;
+
+                    SEL3 = ST0;
+                    SEL2 = W2;
+                    SEL1 = (W1 & ~ST0) | (W2 & ST0);
+                    SEL0 = W1;
+
+                    SST0 = W2 & ~ST0;   // 请求翻转ST0
                 end
 
                 default: ;
