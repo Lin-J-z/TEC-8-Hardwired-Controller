@@ -118,13 +118,15 @@
 ---
 
 ## 六、项目结构
-TEC-8-Hardwired-Controller/
-├── README.md # 本文件
-├── src/
-│ ├── basic_task.v # Verilog 源码
-│ └── basic_task.qsf # 引脚分配文件
-└── docs/ # 文档目录
 
+```
+TEC-8-Hardwired-Controller/
+├── README.md
+├── src/
+│   ├── basic_task.v
+│   └── basic_task.qsf
+└── docs/
+```
 
 ---
 
