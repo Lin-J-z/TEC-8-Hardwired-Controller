@@ -226,7 +226,11 @@ localparam [3:0]
                         
                         SBUS = W2;
                         LPC = W2;
-                        SST0 = W2;
+                        LONG = W2;
+
+                        LIR = W3;
+                        PCINC = W3;
+                        SST0 = W3;
                     end
                 end
 
