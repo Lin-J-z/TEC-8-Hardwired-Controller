@@ -88,4 +88,4 @@ set_location_assignment PIN_48 -to SEL0
 set_location_assignment PIN_49 -to SEL1
 set_location_assignment PIN_50 -to SEL2
 set_location_assignment PIN_51 -to SEL3
-set_location_assignment PIN_52 -to SELECT
+set_location_assignment PIN_52 -to SELCTL
