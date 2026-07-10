@@ -223,7 +223,7 @@ localparam [3:0]
                     STOP = W1 | W2;
                     SEL3 = W2;
                     SEL2 = 1'b0;
-                    SEL1 = W1;
+                    SEL1 = W2;
                     SEL0 = 1'b1;
                 end
 
