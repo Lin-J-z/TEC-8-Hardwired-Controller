@@ -13,7 +13,7 @@ set_location_assignment PIN_1 -to CLR
 set_location_assignment PIN_2 -to C
 
 # ==================== 【新增引脚】 ====================
-set_location_assignment PIN_17 -to INT
+set_location_assignment PIN_61 -to INT
 # ====================================================================
 
 set_location_assignment PIN_4 -to SWA
