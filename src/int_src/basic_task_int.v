@@ -1,4 +1,4 @@
-module basic_task(
+module basic_task_int(
     // ==================== 输入信号 ====================
     input CLR,                 // 异步清零/复位信号（低电平有效）
     input SWA, SWB, SWC,       // 控制台开关：用于选择系统运行模式（如自动运行、读写内存、读写寄存器等）
@@ -64,7 +64,7 @@ localparam [3:0]
     OPCODE_MOV = 4'b1011,
     OPCODE_CMP = 4'b1100,
     OPCODE_NOT = 4'b1101,
-    OPCODE_STP = 4'b1110;
+    OPCODE_STP = 4'b1110,
     OPCODE_INT = 4'b1111;
 
 // ---------- 内部状态信号（非外部引脚） ----------
